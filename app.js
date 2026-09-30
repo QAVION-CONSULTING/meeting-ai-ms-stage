@@ -5,6 +5,7 @@
   const teams = window.microsoftTeams;
   const el = (id) => document.getElementById(id);
   const setStatus = (id, text) => { el(id).textContent = text || ""; };
+  let chatId = "";
 
   function isHttps(url) {
     try {
@@ -28,28 +29,54 @@
     if (!w) throw new Error("Der Link konnte nicht geöffnet werden (Popup blockiert?).");
   }
 
-  function bindLinkButton(buttonId, item) {
-    const button = el(buttonId);
-    if (!item?.url) {
-      button.hidden = true;
+  function consentUrl(act) {
+    const url = new URL("teams/consent-entry", cfg.consent.backendUrl + "/");
+    url.searchParams.set("chat_id", chatId);
+    url.searchParams.set("act", act);
+    return url.href;
+  }
+
+  async function giveConsent() {
+    setStatus("status", "");
+    if (!isHttps(cfg.consent?.backendUrl)) {
+      setStatus("status", "Das OttoMeet-Backend ist noch nicht konfiguriert (consent.backendUrl).");
       return;
     }
-    button.textContent = item.label || item.url;
-    button.addEventListener("click", async () => {
-      setStatus("status", "");
-      try {
-        await openExternal(item.url);
-      } catch (err) {
-        setStatus("status", err?.message || "Link konnte nicht geöffnet werden.");
-      }
-    });
+    if (!chatId) {
+      setStatus("status", "Die Einwilligung ist nur innerhalb einer Teams-Besprechung möglich.");
+      return;
+    }
+    try {
+      await openExternal(consentUrl("accept"));
+      setStatus("status", "Bitte die Einwilligung im geöffneten Browserfenster bestätigen.");
+    } catch (err) {
+      setStatus("status", err?.message || "Die Einwilligungsseite konnte nicht geöffnet werden.");
+    }
   }
 
   function showStageView() {
-    el("title").textContent = cfg.title || "Meeting Links";
+    el("title").textContent = cfg.title || "OttoMeet";
     el("subtitle").textContent = cfg.subtitle || "";
-    bindLinkButton("button1", cfg.button1);
-    bindLinkButton("button2", cfg.button2);
+
+    const consentButton = el("consentButton");
+    consentButton.textContent = cfg.consent?.label || "I Consent";
+    consentButton.addEventListener("click", giveConsent);
+
+    const ottomeetButton = el("ottomeetButton");
+    if (cfg.ottomeet?.url) {
+      ottomeetButton.textContent = cfg.ottomeet.label || "Open OttoMeet";
+      ottomeetButton.addEventListener("click", async () => {
+        setStatus("status", "");
+        try {
+          await openExternal(cfg.ottomeet.url);
+        } catch (err) {
+          setStatus("status", err?.message || "OttoMeet konnte nicht geöffnet werden.");
+        }
+      });
+    } else {
+      ottomeetButton.hidden = true;
+    }
+
     el("stageView").hidden = false;
   }
 
@@ -74,7 +101,7 @@
         setStatus("launcherStatus", `Teilen fehlgeschlagen: ${err.message || err.errorCode || "Unbekannter Fehler"}`);
         return;
       }
-      setStatus("launcherStatus", result ? "Die Links werden jetzt auf der Meeting-Bühne angezeigt." : "Teilen wurde nicht bestätigt.");
+      setStatus("launcherStatus", result ? "OttoMeet wird jetzt auf der Meeting-Bühne angezeigt." : "Teilen wurde nicht bestätigt.");
     }, stageUrl);
   }
 
@@ -98,11 +125,12 @@
       await teams.app.initialize();
     } catch {
       showStageView();
-      setStatus("status", "Außerhalb von Teams geöffnet – Links funktionieren trotzdem.");
+      setStatus("status", "Außerhalb von Teams geöffnet – „I Consent“ funktioniert nur in einer Besprechung.");
       return;
     }
 
     const context = await teams.app.getContext();
+    chatId = context?.chat?.id || "";
     const frameContext = context?.page?.frameContext;
     document.body.dataset.frame = frameContext || "";
     document.body.dataset.theme = context?.app?.theme || "default";
