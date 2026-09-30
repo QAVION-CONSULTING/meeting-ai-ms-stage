@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Meeting Links Stage</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/MicrosoftTeams.min.js"></script>
+  <script src="config.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <!-- Side Panel: nur Starter für die Bühne -->
+    <section id="launcher" class="card" hidden>
+      <div class="eyebrow">Meeting Stage</div>
+      <h1>Meeting Links Stage</h1>
+      <p class="hint">Zeigt die Links groß auf der Meeting-Bühne für alle Teilnehmer an.</p>
+      <button id="shareStage" class="stage" type="button">Auf Meeting-Bühne anzeigen</button>
+      <p id="launcherStatus" class="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Bühnenansicht -->
+    <section id="stageView" class="card" hidden>
+      <div class="eyebrow">Microsoft Teams</div>
+      <h1 id="title">Meeting Links</h1>
+      <p id="subtitle"></p>
+
+      <div class="actions">
+        <button id="button1" class="primary" type="button"></button>
+        <button id="button2" class="secondary" type="button"></button>
+      </div>
+
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+  </main>
+</body>
+</html>
