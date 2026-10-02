@@ -1,0 +1,51 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "{{VERSION}}",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "{{DEVELOPER_NAME}}",
+    "websiteUrl": "{{HOST}}/",
+    "privacyUrl": "{{HOST}}/privacy.html",
+    "termsOfUseUrl": "{{HOST}}/terms.html"
+  },
+  "name": {
+    "short": "Meeting Links Stage",
+    "full": "Meeting Links – Meeting Stage"
+  },
+  "description": {
+    "short": "Zwei HTTPS-Links groß auf der Meeting-Bühne.",
+    "full": "Zeigt zwei konfigurierbare HTTPS-Schaltflächen groß auf der Meeting-Bühne (Stage) für alle Teilnehmer an. Gestartet wird die Bühnenansicht über das Side Panel der App."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#0F6E7A",
+  "configurableTabs": [
+    {
+      "configurationUrl": "{{HOST}}/config.html",
+      "canUpdateConfiguration": true,
+      "scopes": ["groupChat"],
+      "context": [
+        "meetingSidePanel",
+        "meetingStage",
+        "meetingChatTab",
+        "meetingDetailsTab"
+      ]
+    }
+  ],
+  "permissions": [],
+  "validDomains": ["{{HOSTNAME}}"],
+  "showLoadingIndicator": false,
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "MeetingStage.Write.Chat",
+          "type": "Delegated"
+        }
+      ]
+    }
+  }
+}

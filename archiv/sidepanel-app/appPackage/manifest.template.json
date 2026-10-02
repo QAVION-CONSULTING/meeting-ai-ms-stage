@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "{{VERSION}}",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "{{DEVELOPER_NAME}}",
+    "websiteUrl": "{{HOST}}/",
+    "privacyUrl": "{{HOST}}/privacy.html",
+    "termsOfUseUrl": "{{HOST}}/terms.html"
+  },
+  "name": {
+    "short": "Meeting Links Panel",
+    "full": "Meeting Links – Side Panel"
+  },
+  "description": {
+    "short": "Zwei HTTPS-Links im Side Panel einer Teams-Besprechung.",
+    "full": "Zeigt zwei konfigurierbare HTTPS-Schaltflächen im Side Panel einer Teams-Besprechung an. Jeder Teilnehmer öffnet die Links für sich selbst."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#6264A7",
+  "configurableTabs": [
+    {
+      "configurationUrl": "{{HOST}}/config.html",
+      "canUpdateConfiguration": true,
+      "scopes": ["groupChat"],
+      "context": [
+        "meetingSidePanel",
+        "meetingChatTab",
+        "meetingDetailsTab"
+      ]
+    }
+  ],
+  "permissions": [],
+  "validDomains": ["{{HOSTNAME}}"],
+  "showLoadingIndicator": false
+}

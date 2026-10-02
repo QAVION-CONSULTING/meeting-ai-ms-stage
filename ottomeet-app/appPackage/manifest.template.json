@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "{{VERSION}}",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "{{DEVELOPER_NAME}}",
+    "websiteUrl": "{{HOST}}/",
+    "privacyUrl": "{{HOST}}/privacy.html",
+    "termsOfUseUrl": "{{HOST}}/terms.html"
+  },
+  "name": {
+    "short": "OttoMeet",
+    "full": "OttoMeet – Meeting AI"
+  },
+  "description": {
+    "short": "Einwilligung und Transkription für Teams-Besprechungen.",
+    "full": "OttoMeet im Meeting: Einwilligung zur Transkription geben oder zurückziehen und OttoMeet starten – direkt aus dem Side Panel der Besprechung."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#1F2A6B",
+  "configurableTabs": [
+    {
+      "configurationUrl": "{{HOST}}/config.html",
+      "canUpdateConfiguration": true,
+      "scopes": ["groupChat"],
+      "context": [
+        "meetingSidePanel",
+        "meetingChatTab",
+        "meetingDetailsTab"
+      ]
+    }
+  ],
+  "permissions": [],
+  "validDomains": ["{{HOSTNAME}}"],
+  "showLoadingIndicator": false
+}

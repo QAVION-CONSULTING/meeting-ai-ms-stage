@@ -1,0 +1,12 @@
+{
+  "appId": "a41253e6-0f12-4524-97e8-c93b22afded7",
+  "version": "1.0.0",
+  "host": "https://qavion-consulting.github.io/meeting-ai-ms-panel",
+  "developerName": "QAVION Consulting",
+  "labels": {
+    "consent": "Consent geben",
+    "withdraw": "Consent ablehnen",
+    "ottomeet": "Transkript starten (OttoMeet öffnen)"
+  },
+  "ottomeetUrl": "https://www.google.de"
+}

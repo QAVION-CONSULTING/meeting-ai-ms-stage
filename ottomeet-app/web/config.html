@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OttoMeet – Einrichtung</title>
+  <link rel="stylesheet" href="styles.css?v=__BUILD__">
+  <script src="vendor/MicrosoftTeams.min.js?v=__BUILD__"></script>
+</head>
+<body>
+  <main class="panel">
+    <h2>OttoMeet zu dieser Besprechung hinzufügen</h2>
+    <p>Klicke auf <strong>Speichern</strong>. OttoMeet erscheint danach als eigenes Symbol in der Meeting-Leiste.
+      Dort kann jeder Teilnehmer seine Einwilligung zur Transkription geben oder zurückziehen.</p>
+    <p id="message" class="message" aria-live="polite"></p>
+  </main>
+  <script>
+    (async () => {
+      try {
+        await microsoftTeams.app.initialize();
+        const context = await microsoftTeams.app.getContext();
+        document.body.dataset.theme = context?.app?.theme || "default";
+        const base = new URL(".", window.location.href).href;
+        microsoftTeams.pages.config.registerOnSaveHandler((saveEvent) => {
+          microsoftTeams.pages.config
+            .setConfig({
+              entityId: "ottomeet",
+              suggestedDisplayName: "OttoMeet",
+              contentUrl: base + "index.html",
+              websiteUrl: base + "index.html"
+            })
+            .then(() => saveEvent.notifySuccess())
+            .catch((err) => saveEvent.notifyFailure(String(err?.message || err)));
+        });
+        microsoftTeams.pages.config.setValidityState(true);
+      } catch (err) {
+        document.getElementById("message").textContent = "Diese Seite muss innerhalb von Microsoft Teams geöffnet werden.";
+      }
+    })();
+  </script>
+</body>
+</html>

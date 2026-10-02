@@ -1,0 +1,16 @@
+{
+  "appId": "427a407a-b0ca-4bd2-afb4-a5b102659403",
+  "version": "1.0.0",
+  "host": "https://qavion-consulting.github.io/meeting-ai-ms-panel",
+  "developerName": "Meine Organisation",
+  "title": "OttoMeet",
+  "subtitle": "Einwilligung zur Transkription dieser Besprechung",
+  "consent": {
+    "label": "I Consent",
+    "backendUrl": "https://YOUR_OTTOMEET_BACKEND"
+  },
+  "ottomeet": {
+    "label": "Open OttoMeet",
+    "url": "https://www.google.de"
+  }
+}

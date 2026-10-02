@@ -1,0 +1,16 @@
+{
+  "appId": "275a1cc5-f9a8-40da-b11b-e1bd1ad6ede9",
+  "version": "1.0.0",
+  "host": "https://qavion-consulting.github.io/meeting-ai-ms-stage",
+  "developerName": "Meine Organisation",
+  "title": "OttoMeet",
+  "subtitle": "Einwilligung zur Transkription – bitte jeder selbst klicken",
+  "consent": {
+    "label": "I Consent",
+    "backendUrl": "https://YOUR_OTTOMEET_BACKEND"
+  },
+  "ottomeet": {
+    "label": "Open OttoMeet",
+    "url": "https://www.google.de"
+  }
+}
