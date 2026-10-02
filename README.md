@@ -60,7 +60,7 @@ Ein Klick öffnet rechts das **OttoMeet-Side-Panel** mit den Reitern *Meeting*, 
 | Eigenes OttoMeet-Symbol in der Meeting-Leiste | ✅ | Meeting-App mit `meetingSidePanel`. Erscheint, sobald die App zum Meeting hinzugefügt ist ([Abschnitt 10](#10-ottomeet-in-die-meeting-leiste-bringen)). |
 | Side Panel mit Consent-Status und Buttons | ✅ | Diese App. |
 | Status „Consent erteilt“ / „abgelehnt“ anzeigen | ✅ | Benötigt die Backend-Route `/teams/app-status` ([Abschnitt 6](#6-ottomeet-backend-anbinden)). |
-| App automatisch in jedem OttoMeet-Meeting | ✅ | Optionaler Backend-Baustein `install_meeting_tab.py` (Graph). |
+| App automatisch in jedem OttoMeet-Meeting | ✅ | Optional über Microsoft Graph aus dem OttoMeet-Backend ([Abschnitt 10](#10-ottomeet-in-die-meeting-leiste-bringen)). |
 | Roter Badge am App-Symbol | ❌ | Teams bietet dafür nach aktuellem Stand keine Schnittstelle. |
 | Einblendung „Zustimmung erforderlich“ im Meeting | ⚠️ nur mit Bot | *Targeted In-Meeting Notification* über einen Bot – Ausbaustufe, siehe [Abschnitt 14](#14-technische-details-und-ausbaustufen). |
 
@@ -118,11 +118,6 @@ ms-plugin/
 │  │  ├─ privacy.html, terms.html
 │  │  └─ vendor/MicrosoftTeams.min.js  (TeamsJS 2.57.0)
 │  └─ tools/make_icons.py             <- erzeugt die Icons neu
-├─ ottomeet-backend/                  <- Bausteine für das OttoMeet-Backend (FastAPI)
-│  ├─ README.md                       <- Schnittstellen-Beschreibung
-│  ├─ consent_entry_route.py          <- GET /teams/consent-entry
-│  ├─ app_status_route.py             <- GET /teams/app-status
-│  └─ install_meeting_tab.py          <- optional: App automatisch ins Meeting
 └─ archiv/                            <- frühere Varianten (nicht mehr verwendet)
 ```
 
@@ -182,16 +177,51 @@ python3 build.py --backend https://ottomeet.deutz.com --save
 
 ## 6. OttoMeet-Backend anbinden
 
-Im Ordner [`ottomeet-backend/`](ottomeet-backend/README.md) liegen fertige FastAPI-Bausteine.
-Die mit `# adapt` markierten Zeilen verweisen auf vorhandene Funktionen (Sitzung per `chat_id`,
-letzte Entscheidung, persistente Einwilligung, Token der Datenschutz-Karte).
+Die App erwartet im OttoMeet-Backend zwei Routen. `chat_id` ist die Chat-ID des Meetings aus Teams
+(`context.chat.id`, entspricht `consent_sessions.chat_id`).
 
-| Baustein | Zweck | Pflicht |
+| Route / Einstellung | Zweck | Pflicht |
 |---|---|---|
-| `GET /teams/consent-entry?chat_id=…&act=accept\|decline` | Buttons **Consent geben** / **Consent ablehnen**: sucht die laufende Sitzung und leitet auf `/teams/consent` bzw. `/teams/withdraw_consent` weiter | ja |
-| `GET /teams/app-status?chat_id=…&user_oid=…&upn=…` | Status-Karte im Side Panel (JSON) | ja |
-| CORS für `https://qavion-consulting.github.io` | nötig, weil das Side Panel `/teams/app-status` per `fetch` abfragt | ja |
-| `install_ottomeet_tab(token, chat_id)` | fügt OttoMeet beim Start automatisch zum Meeting hinzu → Symbol in der Leiste für alle | optional |
+| `GET /teams/consent-entry?chat_id=…&act=accept\|decline` | Buttons **Consent geben** / **Consent ablehnen** (im Browser geöffnet) | ja |
+| `GET /teams/app-status?chat_id=…&user_oid=…&upn=…` | Status-Karte im Side Panel (JSON, per `fetch`) | ja |
+| CORS für `https://qavion-consulting.github.io` (Methode `GET`, Header `Accept`) | nötig, weil das Side Panel `/teams/app-status` per `fetch` abfragt | ja |
+
+### `GET /teams/consent-entry`
+
+| Fall | Antwort |
+|---|---|
+| Offene Sitzung für `chat_id` | `302` auf `/teams/consent?token=…` (`accept`) bzw. `/teams/withdraw_consent?token=…` (`decline`) – gleiches signiertes Token wie in der Datenschutz-Karte |
+| Keine offene Sitzung | `404` mit HTML-Seite „OttoMeet ist nicht aktiv“ |
+
+Alles nach der Weiterleitung ist der bestehende Ablauf (Entra-Anmeldung, Bestätigung, Audit-Eintrag,
+Chat-Hinweis, Rechte-Sync).
+
+### `GET /teams/app-status`
+
+`user_oid` = `context.user.id`, `upn` = `context.user.userPrincipalName`. Antworten:
+
+```json
+{ "session_active": false }
+```
+
+```json
+{
+  "session_active": true,
+  "recording_mode": "consent",
+  "decision": "accept",
+  "persistent_consent": false,
+  "consented": true,
+  "started_at": "2026-10-02T13:45:12+00:00"
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `recording_mode` | `consent` (Opt-in) oder `tagged` (Opt-out) |
+| `decision` | Letzte Entscheidung dieser Person in dieser Sitzung: `accept`, `decline` oder `none` |
+| `persistent_consent` | Automatische Einwilligung für alle Meetings aktiv |
+| `consented` | Ergebnis der Regeln: `decline` → nein; sonst `tagged` → ja; `accept` → ja; persistente Einwilligung → ja; sonst nein |
+| `started_at` | Start der Sitzung (für die Laufzeit-Anzeige) |
 
 Nach dem Einbau: `backendUrl` setzen ([Abschnitt 5](#5-einstellungen)), bauen, Web-App veröffentlichen.
 **Kein neues Teams-ZIP nötig** – die Backend-URL steckt nur in den Web-Dateien.
@@ -324,10 +354,16 @@ Das OttoMeet-Symbol erscheint in der Meeting-Leiste, **sobald die App zum Meetin
 Dafür gibt es drei Wege:
 
 **a) Automatisch durch das OttoMeet-Backend (empfohlen)**
-Beim Start der Aufzeichnung ruft das Backend `install_ottomeet_tab(organizer_token, chat_id)` auf
-([`ottomeet-backend/install_meeting_tab.py`](ottomeet-backend/install_meeting_tab.py)). Die App wird im
-Meeting-Chat installiert und als Tab hinzugefügt – das Symbol erscheint für alle Teilnehmer.
-Voraussetzungen: App ist im Admin Center veröffentlicht; zusätzliche Graph-Berechtigungen
+Beim Start der Aufzeichnung installiert das Backend die App im Meeting-Chat und fügt sie als Tab hinzu –
+das Symbol erscheint dann für alle Teilnehmer. Microsoft-Graph-Aufrufe mit dem Token des Organisators:
+
+1. `GET /appCatalogs/teamsApps?$filter=externalId eq 'a41253e6-0f12-4524-97e8-c93b22afded7'`
+   → Katalog-ID der App (unterscheidet sich von der Manifest-ID)
+2. `POST /chats/{chat-id}/installedApps` mit `{"teamsApp@odata.bind": ".../appCatalogs/teamsApps/{katalog-id}"}`
+3. `POST /chats/{chat-id}/tabs` mit `displayName: "OttoMeet"`, derselben App-Bindung und
+   `configuration.contentUrl` / `websiteUrl` = `https://qavion-consulting.github.io/meeting-ai-ms-panel/index.html`
+
+Voraussetzungen: App ist im Admin Center veröffentlicht; zusätzliche delegierte Graph-Berechtigungen
 `TeamsAppInstallation.ReadWriteForChat` und `TeamsTab.Create`.
 
 **b) Durch den Organisator vor dem Meeting**
